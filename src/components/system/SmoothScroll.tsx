@@ -27,7 +27,16 @@ export function SmoothScroll() {
       smoothWheel: true,
       autoRaf: true,
       anchors: { offset: -80 },
-      prevent: (node) => !!node.closest?.(".thin-scroll, [role=dialog], [role=log], [role=application], [data-lenis-prevent]"),
+      // Hand the wheel to an inner box only if it can actually scroll vertically; otherwise Lenis keeps
+      // control. (Blanket-preventing panels let the wheel fall through to native page scroll → jumps.)
+      prevent: (node) => {
+        for (let el: HTMLElement | null = node; el && el !== document.body; el = el.parentElement) {
+          if (el.matches("[role=dialog], [data-lenis-prevent]")) return true;
+          const oy = getComputedStyle(el).overflowY;
+          if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight + 1) return true;
+        }
+        return false;
+      },
     });
     window.__lenis = lenis;
     return () => {

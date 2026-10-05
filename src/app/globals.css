@@ -257,7 +257,11 @@ body {
   animation: marquee 40s linear infinite;
 }
 
-/* Scrollbars */
+/* Scrollbars — inner scroll areas never chain scrolling to the page */
+.thin-scroll,
+[role="log"] {
+  overscroll-behavior: contain;
+}
 .thin-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
