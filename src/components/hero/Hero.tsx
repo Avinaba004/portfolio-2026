@@ -62,15 +62,18 @@ export function Hero({ ready }: { ready: boolean }) {
     <section id="system" data-debug="Hero · SignalBus · RobotScene" tabIndex={-1} className="relative overflow-hidden outline-none" aria-labelledby="hero-title">
       {/* Quiet backdrop: grid + two soft light sources */}
       <div className="bp-grid mask-fade absolute inset-0 opacity-50" aria-hidden />
-      <div className="pointer-events-none absolute -top-48 right-[-10%] h-[640px] w-[640px] rounded-full bg-signal/12 blur-[130px]" aria-hidden />
-      <div className="pointer-events-none absolute -bottom-48 left-[-10%] h-[560px] w-[560px] rounded-full bg-cobalt/10 blur-[130px]" aria-hidden />
+      <div className="glow pointer-events-none absolute -top-64 right-[-18%] h-[900px] w-[900px]" style={{ "--glow": "rgb(255 77 23 / 0.13)" } as React.CSSProperties} aria-hidden />
+      <div className="glow pointer-events-none absolute -bottom-64 left-[-18%] h-[820px] w-[820px]" style={{ "--glow": "rgb(47 75 255 / 0.10)" } as React.CSSProperties} aria-hidden />
 
       <div className="relative mx-auto grid min-h-[100svh] max-w-[1500px] items-center gap-6 px-5 pt-28 pb-14 sm:px-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-4 lg:px-[6%] lg:pt-24">
         {/* Left: identity */}
         <div className="@container relative z-10 min-w-0">
-          <motion.p {...fade(0.1)} className="flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] text-ink-2">
+          <motion.p {...fade(0.1)} className="flex flex-wrap items-center gap-x-2 gap-y-2 font-mono text-[11px] tracking-[0.18em] text-ink-2">
             <span className="h-1.5 w-1.5 rounded-full bg-mint pulse-dot" aria-hidden />
             SYSTEM READY <span className="text-muted">·</span> {profile.location.toUpperCase()}
+            <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-amber/50 bg-amber/10 px-2 py-0.5 text-[10px] tracking-[0.12em] text-ink">
+              <span className="text-amber" aria-hidden>★</span> RANK 1 IN COLLEGE · B.TECH CSE
+            </span>
           </motion.p>
 
           <h1 id="hero-title" className="mt-5 font-display leading-[0.86] font-extrabold tracking-[-0.045em] text-ink">

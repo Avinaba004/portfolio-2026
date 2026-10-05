@@ -11,7 +11,6 @@ import { scrollToSection } from "@/lib/navigate";
 // Below-the-fold sections are split into their own chunks.
 const Incidents = dynamic(() => import("@/components/sections/Incidents").then((m) => m.Incidents));
 const StackGraph = dynamic(() => import("@/components/sections/StackGraph").then((m) => m.StackGraph));
-const HowIWork = dynamic(() => import("@/components/sections/HowIWork").then((m) => m.HowIWork));
 const DNA = dynamic(() => import("@/components/sections/DNA").then((m) => m.DNA));
 const Timeline = dynamic(() => import("@/components/sections/Timeline").then((m) => m.Timeline));
 const Lab = dynamic(() => import("@/components/lab/Lab").then((m) => m.Lab));
@@ -39,7 +38,6 @@ export function HomeClient() {
         <ProjectGalaxy />
         <Incidents />
         <StackGraph />
-        <HowIWork />
         <DNA />
         <Timeline />
         <Lab />

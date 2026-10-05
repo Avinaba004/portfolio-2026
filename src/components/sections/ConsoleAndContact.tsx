@@ -12,7 +12,7 @@ export function ConsoleSection() {
   return (
     <Section id="console" debug="Console · Terminal · AskAvinaba" labelledBy="console-h">
       <SectionHeader
-        index="09"
+        index="08"
         kicker="INTERFACES"
         title={
           <span id="console-h">
@@ -48,10 +48,10 @@ export function Contact() {
   return (
     <section id="contact" data-debug="Contact" tabIndex={-1} aria-labelledby="contact-h" className="relative overflow-hidden px-5 pt-24 pb-32 outline-none sm:px-10 sm:pt-32 lg:px-[8%]">
       <div className="bp-grid mask-fade absolute inset-0 opacity-60" aria-hidden />
-      <div className="pointer-events-none absolute top-1/2 left-1/2 h-[500px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-signal/10 blur-[120px]" aria-hidden />
+      <div className="glow pointer-events-none absolute top-1/2 left-1/2 h-[700px] w-[1200px] -translate-x-1/2 -translate-y-1/2" style={{ "--glow": "rgb(255 77 23 / 0.10)" } as React.CSSProperties} aria-hidden />
       <div className="relative mx-auto max-w-[1400px] text-center">
         <div className="mb-6 flex items-center justify-center gap-3">
-          <span className="font-mono text-xs text-signal">10</span>
+          <span className="font-mono text-xs text-signal">09</span>
           <span className="h-px w-10 bg-line-strong" aria-hidden />
           <span className="label">CONTACT</span>
         </div>

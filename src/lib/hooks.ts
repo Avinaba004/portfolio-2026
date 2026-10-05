@@ -17,6 +17,9 @@ export function useMediaQuery(query: string, fallback = false) {
 
 export const useReducedMotionPref = () => useMediaQuery("(prefers-reduced-motion: reduce)");
 
+/** Mouse/trackpad devices. Touch phones & tablets get lighter, GPU-friendly effects. */
+export const useFinePointer = () => useMediaQuery("(hover: hover) and (pointer: fine)", true);
+
 /** True once the element has come near the viewport (mount-once lazy loading). */
 export function useNearView<T extends Element>(margin = "300px") {
   const ref = useRef<T>(null);

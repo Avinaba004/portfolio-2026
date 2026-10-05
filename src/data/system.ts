@@ -1,6 +1,5 @@
 /**
- * Relationship data powering the hero graph, stack graph, experience matrix,
- * incidents, workflow and timeline. Derived from the resume + portfolio brief.
+ * Relationship data powering the hero graph, stack graph, incidents and timeline. Derived from the resume + portfolio brief.
  */
 
 /* ---------------- Hero system graph ---------------- */
@@ -79,18 +78,6 @@ export const stackEdges: [string, string][] = [
   ["forms", "oauth"],
 ];
 
-/* ---------------- Experience matrix ---------------- */
-
-export const matrixProjects = ["ODYS", "GULP", "EGLE", "MOPBB", "LURIE"] as const;
-export const matrix: { tech: string; on: boolean[] }[] = [
-  { tech: "React", on: [true, true, true, true, true] },
-  { tech: "Python", on: [true, true, true, true, true] },
-  { tech: "SQL", on: [true, true, true, true, false] },
-  { tech: "Gemini", on: [false, true, true, true, false] },
-  { tech: "OAuth", on: [true, true, false, false, true] },
-  { tech: "GCP", on: [true, true, false, false, false] },
-];
-
 /* ---------------- Things that broke ---------------- */
 
 export type Incident = {
@@ -111,21 +98,6 @@ export const incidents: Incident[] = [
   { id: "missing", code: "DATA", title: "MISSING HEALTH DATA", project: "LURIE", steps: ["Gaps identified in API responses", "Expected vs actual data compared", "Fallback handling", "Dashboard stays consistent"], tech: ["Python", "Error Handling"], x: 30, y: 56 },
   { id: "raw", code: "LLM", title: "AI RAW RESPONSE", project: "GULP / EGLE", steps: ["Unstructured model output", "Structured output definition", "JSON parsing & validation", "Usable configuration / data"], tech: ["Gemini", "Prompt Engineering", "JSON"], x: 4, y: 74 },
   { id: "large", code: "API", title: "LARGE API DATASET", project: "LURIE", steps: ["Oversized retrievals", "Request scope analyzed", "Granular retrieval", "Manageable, reliable responses"], tech: ["APIs", "Python"], x: 60, y: 76 },
-];
-
-/* ---------------- How I actually work ---------------- */
-
-export const workStages: { stage: string; example: string; detail: string }[] = [
-  { stage: "CLIENT REQUIREMENT", example: "ODYS government workflows", detail: "Gathered client requirements for US state government applications." },
-  { stage: "UNDERSTAND", example: "Counties · courts · grants", detail: "Map who the users are, what they submit, and who approves it." },
-  { stage: "MODEL", example: "Data modeling & schema design", detail: "Relational models in PostgreSQL; JSONB where configuration must flex." },
-  { stage: "DESIGN", example: "Config-driven architecture", detail: "Forms, workflows and rules as versioned configuration, not hard-coded screens." },
-  { stage: "BUILD", example: "React / Next.js / Python", detail: "Full-stack implementation from UI to API to database." },
-  { stage: "INTEGRATE", example: "Google Health / OAuth / Asana APIs", detail: "Third-party APIs, webhooks, SSO providers and Gemini." },
-  { stage: "TEST", example: "Playwright", detail: "End-to-end testing on the Medicaid Level-of-Care rule engine." },
-  { stage: "DEBUG", example: "OAuth / schema / session / API issues", detail: "401s, redirect loops, schema mismatches, missing data." },
-  { stage: "DEMO", example: "US state government clients", detail: "Delivered POCs and demos of government applications." },
-  { stage: "ITERATE", example: "Deployment & production support", detail: "Ship through Dev → UAT → Prod on GCP Cloud Run, then support it in production." },
 ];
 
 /* ---------------- Career timeline ---------------- */

@@ -445,6 +445,7 @@ export const labProjects: Project[] = [
     metrics: [],
     views: { system: "", flow: "", human: "" },
     skills: ["Next.js", "React", "FastAPI", "Python", "APIs"],
+    links: [{ label: "GitHub", href: "https://github.com/Avinaba004/Real-Time-Fight-Tracker" }],
   },
   {
     slug: "stories",
@@ -512,6 +513,7 @@ export const labProjects: Project[] = [
     metrics: [],
     views: { system: "", flow: "", human: "" },
     skills: ["Next.js", "PostgreSQL", "Supabase", "Prisma", "Clerk", "Inngest", "Arcjet", "Gemini", "AI"],
+    links: [{ label: "GitHub", href: "https://github.com/Avinaba004/ExpTrack" }],
   },
   {
     slug: "query",

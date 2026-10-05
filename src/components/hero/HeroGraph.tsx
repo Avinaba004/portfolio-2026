@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { heroLinks, heroProjects, heroSkills, projectSlugByName } from "@/data/system";
 import { useApp } from "@/components/system/AppProvider";
-import { useInterval, useReducedMotionPref } from "@/lib/hooks";
+import { useFinePointer, useInterval, useReducedMotionPref } from "@/lib/hooks";
 
 type Skill = (typeof heroSkills)[number];
 type Proj = (typeof heroProjects)[number];
@@ -25,6 +25,8 @@ export function HeroGraph() {
   const [auto, setAuto] = useState(0);
   const [inView, setInView] = useState(true);
   const reduced = useReducedMotionPref();
+  // SMIL packets repaint the whole SVG every frame — keep them to desktop.
+  const packets = useFinePointer();
   // Autoplay walks the skills one by one; a hover takes over and plays only that node.
   const sel: Sel = hover ?? (reduced ? null : { kind: "skill", id: heroSkills[auto % heroSkills.length] });
   const autoplaying = !hover && !reduced;
@@ -114,9 +116,11 @@ export function HeroGraph() {
                   animate={{ pathLength: 1, opacity: 0.9 }}
                   transition={{ duration: 0.45, delay: i * 0.05, ease: "easeOut" }}
                 />
-                <circle r="2.5" fill={reverse ? "var(--cobalt)" : "var(--signal)"}>
-                  <animateMotion dur={`${1.1 + i * 0.1}s`} repeatCount="indefinite" path={d} />
-                </circle>
+                {packets && (
+                  <circle r="2.5" fill={reverse ? "var(--cobalt)" : "var(--signal)"}>
+                    <animateMotion dur={`${1.1 + i * 0.1}s`} repeatCount="indefinite" path={d} />
+                  </circle>
+                )}
               </g>
             );
           })}

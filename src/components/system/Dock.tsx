@@ -73,7 +73,7 @@ export function Dock() {
   return (
     <>
       <header className="no-print fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3">
-        <nav aria-label="System map" className="panel flex w-full max-w-6xl items-center gap-2 !rounded-2xl px-2 py-2">
+        <nav aria-label="System map" className="panel glass flex w-full max-w-6xl items-center gap-2 !rounded-2xl px-2 py-2">
           {isHome ? (
             <Logo onClick={onLogo} />
           ) : (

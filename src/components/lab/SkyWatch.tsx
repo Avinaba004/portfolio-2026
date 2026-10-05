@@ -49,12 +49,19 @@ export default function SkyWatch() {
   const [snap, setSnap] = useState(() => new Map<string, { lat: number; lon: number }>());
   const drag = useRef<{ x: number; y: number; c: typeof CENTER } | null>(null);
 
-  // Resize observer
+  const [onScreen, setOnScreen] = useState(false);
+
+  // Resize + visibility observers (animation only runs while the map is on screen)
   useEffect(() => {
     const el = wrap.current!;
     const ro = new ResizeObserver(([e]) => setSize({ w: e.contentRect.width, h: e.contentRect.height }));
+    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting));
     ro.observe(el);
-    return () => ro.disconnect();
+    io.observe(el);
+    return () => {
+      ro.disconnect();
+      io.disconnect();
+    };
   }, []);
 
   const load = useCallback(async () => {
@@ -86,7 +93,7 @@ export default function SkyWatch() {
 
   // Dead-reckoning: advance each aircraft along its heading at its velocity → smooth motion between polls.
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!onScreen || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf = 0;
     let last = performance.now();
     let acc = 0;
@@ -117,7 +124,7 @@ export default function SkyWatch() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [data]);
+  }, [data, onScreen]);
 
   const c = project(center.lat, center.lon, zoom);
   const origin = { x: c.x - size.w / 2, y: c.y - size.h / 2 };

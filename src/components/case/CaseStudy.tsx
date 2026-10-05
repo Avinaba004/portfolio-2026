@@ -42,7 +42,7 @@ export function CaseStudy({ p }: { p: Project }) {
       {/* Header */}
       <header className="relative overflow-hidden px-5 pt-32 pb-16 sm:px-10 lg:px-[8%]">
         <div className="bp-grid mask-fade absolute inset-0 opacity-60" aria-hidden />
-        <div className="pointer-events-none absolute -top-32 -right-32 h-[520px] w-[520px] rounded-full opacity-25 blur-[120px]" style={{ background: p.accent }} aria-hidden />
+        <div className="glow pointer-events-none absolute -top-56 -right-56 h-[820px] w-[820px] opacity-30" style={{ "--glow": p.accent } as React.CSSProperties} aria-hidden />
         <div className="relative mx-auto max-w-[1400px]">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="flex flex-wrap items-center gap-2">
             <Link href="/#work" className="chip hover:!border-ink">

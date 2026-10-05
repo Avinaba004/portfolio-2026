@@ -130,10 +130,14 @@ body {
 
 /* Cards / panels */
 .panel {
-  background: color-mix(in srgb, var(--card) 86%, transparent);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 20px;
   box-shadow: var(--shadow-md);
+}
+/* Frosted glass is reserved for the single fixed nav — blurring under every card re-renders on each scroll frame */
+.glass {
+  background: color-mix(in srgb, var(--card) 88%, transparent);
   backdrop-filter: blur(14px) saturate(1.2);
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
 }
@@ -141,6 +145,21 @@ body {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
+}
+
+/* Soft light source without a blur filter (cheap on mobile GPUs) */
+.glow {
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, var(--glow), transparent);
+}
+
+/* Frosted glass over a live WebGL canvas is expensive and flickers on phones — use solid panels there */
+@media (hover: none), (pointer: coarse), (max-width: 1023px) {
+  .glass {
+    background: var(--card);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 /* Mono labels */

@@ -11,7 +11,7 @@ declare global {
 }
 
 /**
- * Inertial smooth scrolling for the whole site (Lenis). Disabled for reduced-motion users.
+ * Inertial smooth scrolling for mouse / trackpad (Lenis). Off for touch and reduced-motion users.
  * Inner scroll areas (terminal, lists, dialogs, maps) keep native scrolling.
  */
 export function SmoothScroll() {
@@ -19,6 +19,8 @@ export function SmoothScroll() {
 
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Touch devices already have native momentum scrolling; smoothing it only adds work.
+    if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     const lenis = new Lenis({
       duration: 1.15,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

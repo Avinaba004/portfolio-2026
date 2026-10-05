@@ -19,7 +19,6 @@ export const sections = [
   { id: "work", label: "WORK" },
   { id: "incidents", label: "DEBUG" },
   { id: "stack", label: "STACK" },
-  { id: "process", label: "PROCESS" },
   { id: "career", label: "CAREER" },
   { id: "lab", label: "LAB" },
   { id: "console", label: "CONSOLE" },

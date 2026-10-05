@@ -22,7 +22,7 @@ export function DNA() {
   return (
     <section ref={ref} id="dna" data-debug="EngineeringDNA" aria-labelledby="dna-h" className="relative overflow-hidden py-24 sm:py-36">
       <div className="mb-10 flex items-center justify-center gap-3">
-        <span className="font-mono text-xs text-signal">06</span>
+        <span className="font-mono text-xs text-signal">05</span>
         <span className="h-px w-10 bg-line-strong" aria-hidden />
         <h2 id="dna-h" className="label">
           ENGINEERING DNA

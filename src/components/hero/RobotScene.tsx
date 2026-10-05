@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
@@ -348,12 +348,34 @@ function Rig({ pointerRef }: { pointerRef: React.RefObject<{ x: number; y: numbe
   return null;
 }
 
+/** Drives a "demand" frameloop at a fixed rate (used for the 30fps touch-device mode). */
+function FrameDriver({ fps }: { fps: number }) {
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    let raf = 0;
+    let last = 0;
+    const step = 1000 / fps;
+    const loop = (t: number) => {
+      if (t - last >= step - 1) {
+        last = t;
+        invalidate();
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [fps, invalidate]);
+  return null;
+}
+
 export default function RobotScene({ celebrate = 0, onPoke }: { celebrate?: number; onPoke?: () => void }) {
   const wrap = useRef<HTMLDivElement>(null);
   const pointer = useRef({ x: 0, y: 0 });
   const excite = useRef(0);
   const [visible, setVisible] = useState(true);
   const [reduced, setReduced] = useState(false);
+  // Phones/tablets: render fewer pixels and at 30fps so the hero stays smooth.
+  const [lite] = useState(() => typeof window !== "undefined" && (matchMedia("(hover: none), (pointer: coarse)").matches || innerWidth < 1024));
 
   useEffect(() => {
     const mq = matchMedia("(prefers-reduced-motion: reduce)");
@@ -388,10 +410,10 @@ export default function RobotScene({ celebrate = 0, onPoke }: { celebrate?: numb
   return (
     <div ref={wrap} className="h-full w-full">
       <Canvas
-        dpr={[1, 1.75]}
-        frameloop={visible ? (reduced ? "demand" : "always") : "never"}
+        dpr={lite ? [1, 1.25] : [1, 1.75]}
+        frameloop={visible ? (reduced || lite ? "demand" : "always") : "never"}
         camera={{ position: [0, 0.5, 7], fov: 38 }}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        gl={{ antialias: true, alpha: true, powerPreference: lite ? "default" : "high-performance" }}
         aria-hidden
       >
         <hemisphereLight args={["#ffffff", "#d9d3c7", 1.1]} />
@@ -412,6 +434,7 @@ export default function RobotScene({ celebrate = 0, onPoke }: { celebrate?: numb
         <Orbiters reduced={reduced} exciteRef={excite} />
         <ContactShadow />
         <Rig pointerRef={pointer} />
+        {lite && visible && !reduced && <FrameDriver fps={30} />}
       </Canvas>
     </div>
   );

@@ -3,11 +3,12 @@
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { matrix, matrixProjects, projectSlugByName, stackEdges, stackNodes } from "@/data/system";
+import { projectSlugByName, stackEdges, stackNodes } from "@/data/system";
 import { skillGroups } from "@/data/profile";
 import { Section, SectionHeader } from "@/components/ui/Section";
 import { useApp } from "@/components/system/AppProvider";
 import { SkillAtlas } from "./SkillAtlas";
+import { useFinePointer } from "@/lib/hooks";
 
 function DependencyGraph() {
   const [sel, setSel] = useState("python");
@@ -15,6 +16,7 @@ function DependencyGraph() {
   const node = stackNodes.find((n) => n.id === sel)!;
   const neighbors = useMemo(() => new Set(stackEdges.filter(([a, b]) => a === sel || b === sel).flat()), [sel]);
   const pos = (id: string) => stackNodes.find((n) => n.id === id)!;
+  const packets = useFinePointer();
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
@@ -35,7 +37,7 @@ function DependencyGraph() {
                   vectorEffect="non-scaling-stroke"
                   animate={{ stroke: on ? "var(--signal)" : "rgba(17,17,20,0.16)", strokeWidth: on ? 2 : 1 }}
                 />
-                {on && (
+                {on && packets && (
                   <circle r="0.7" fill="var(--signal)">
                     <animateMotion dur="1.4s" repeatCount="indefinite" path={a === sel ? d : `M${B.x},${B.y} L${A.x},${A.y}`} />
                   </circle>
@@ -128,76 +130,6 @@ function DependencyGraph() {
   );
 }
 
-function ExperienceMatrix() {
-  const [row, setRow] = useState<number | null>(null);
-  const [col, setCol] = useState<number | null>(null);
-  return (
-    <div className="mt-20">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <div className="label">EXPERIENCE GRAPH</div>
-          <h3 className="mt-2 font-display text-2xl font-bold sm:text-3xl">Technology × Project</h3>
-        </div>
-        <p className="hidden max-w-xs text-right text-sm text-muted sm:block">Hover a technology or project to trace the connections.</p>
-      </div>
-      <div className="panel overflow-x-auto !rounded-[24px] p-4 sm:p-6 thin-scroll">
-        <table className="w-full min-w-[560px] border-separate border-spacing-y-1.5">
-          <caption className="sr-only">Technologies used per project</caption>
-          <thead>
-            <tr>
-              <th className="w-32 text-left label">TECH</th>
-              {matrixProjects.map((p, j) => (
-                <th key={p} scope="col" className="pb-2">
-                  <Link
-                    href={`/work/${projectSlugByName[p]}`}
-                    onPointerEnter={() => setCol(j)}
-                    onPointerLeave={() => setCol(null)}
-                    onFocus={() => setCol(j)}
-                    onBlur={() => setCol(null)}
-                    className={`inline-block rounded-lg px-3 py-1.5 font-display text-[11px] font-bold tracking-wider transition-colors ${col === j ? "bg-ink text-white" : ""}`}
-                  >
-                    {p}
-                  </Link>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {matrix.map((r, i) => (
-              <tr key={r.tech} onPointerEnter={() => setRow(i)} onPointerLeave={() => setRow(null)} className="group">
-                <th scope="row" className={`rounded-l-xl px-3 py-2.5 text-left font-mono text-xs transition-colors ${row === i ? "bg-ink text-white" : "text-ink-2"}`}>
-                  {r.tech}
-                </th>
-                {r.on.map((on, j) => {
-                  const hl = row === i || col === j;
-                  return (
-                    <td key={j} className={`text-center transition-colors ${hl ? "bg-paper-2" : ""} ${j === r.on.length - 1 ? "rounded-r-xl" : ""}`}>
-                      {on ? (
-                        <motion.span
-                          transition={{ type: "spring", stiffness: 300, damping: 14 }}
-                          animate={{ scale: hl ? 1.25 : 1 }}
-                          className={`inline-grid h-7 w-7 place-items-center rounded-full text-[11px] text-white ${hl ? "bg-signal shadow-[0_6px_18px_-4px_var(--signal)]" : "bg-ink"}`}
-                          aria-label="used"
-                        >
-                          ✓
-                        </motion.span>
-                      ) : (
-                        <span className="text-muted" aria-label="not used">
-                          —
-                        </span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
 function SkillTicker() {
   const items = skillGroups.flatMap((g) => g.items);
   return (
@@ -215,7 +147,7 @@ function SkillTicker() {
 
 export function StackGraph() {
   return (
-    <Section id="stack" debug="StackGraph · ExperienceMatrix" labelledBy="stack-h">
+    <Section id="stack" debug="StackGraph · SkillAtlas" labelledBy="stack-h">
       <SectionHeader
         index="04"
         kicker="MY ENGINEERING STACK"
@@ -228,7 +160,6 @@ export function StackGraph() {
         intro="Every technology is connected to where I used it and why. Hover a node to trace it through the system."
       />
       <DependencyGraph />
-      <ExperienceMatrix />
       <SkillAtlas />
       <SkillTicker />
     </Section>

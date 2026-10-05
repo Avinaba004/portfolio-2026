@@ -16,7 +16,7 @@ export function Timeline() {
   return (
     <Section id="career" debug="CareerTimeline" labelledBy="career-h">
       <SectionHeader
-        index="07"
+        index="06"
         kicker="CAREER TIMELINE"
         title={
           <span id="career-h">

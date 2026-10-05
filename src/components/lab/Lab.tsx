@@ -62,7 +62,7 @@ export function Lab() {
       <div className="bp-grid pointer-events-none absolute inset-0 opacity-40 mask-fade-y" aria-hidden />
       <div className="relative">
         <SectionHeader
-          index="08"
+          index="07"
           kicker="PERSONAL PROJECTS"
           title={
             <span id="lab-h">
