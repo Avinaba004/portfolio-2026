@@ -1,26 +1,339 @@
 @import "tailwindcss";
 
+/* ============================================================
+   BLUEPRINT OS — light engineering design system
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f4f2ed;
+  --paper-2: #ebe8e1;
+  --paper-3: #e2ded5;
+  --card: #fbfaf7;
+  --ink: #111114;
+  --ink-2: #33333a;
+  --muted: #5f5f68;
+  --line: rgba(17, 17, 20, 0.12);
+  --line-strong: rgba(17, 17, 20, 0.24);
+
+  --signal: #ff4d17;
+  --cobalt: #2f4bff;
+  --mint: #0e9f6e;
+  --violet: #7a5cff;
+  --amber: #f2a900;
+  --rose: #e8336d;
+  --cyan: #00a3c4;
+
+  --shadow-sm: 0 1px 2px rgba(17, 17, 20, 0.06), 0 2px 8px rgba(17, 17, 20, 0.04);
+  --shadow-md: 0 2px 4px rgba(17, 17, 20, 0.04), 0 12px 32px -8px rgba(17, 17, 20, 0.12);
+  --shadow-lg: 0 4px 8px rgba(17, 17, 20, 0.04), 0 32px 64px -16px rgba(17, 17, 20, 0.2);
+
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-paper-3: var(--paper-3);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-signal: var(--signal);
+  --color-cobalt: var(--cobalt);
+  --color-mint: var(--mint);
+  --color-violet: var(--violet);
+  --color-amber: var(--amber);
+  --color-rose: var(--rose);
+  --color-cyan: var(--cyan);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--paper);
+}
+
+/* Lenis smooth scrolling */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--signal);
+  color: white;
+}
+
+/* Visible, consistent focus */
+:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-geist-sans), sans-serif;
+}
+
+/* Blueprint grid backdrop */
+.bp-grid {
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: -1px -1px;
+}
+.bp-grid-fine {
+  background-image:
+    linear-gradient(rgba(17, 17, 20, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 20, 0.05) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.bp-dots {
+  background-image: radial-gradient(rgba(17, 17, 20, 0.16) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Fade grid edges */
+.mask-fade {
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 78%);
+}
+.mask-fade-y {
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+}
+
+/* Cards / panels */
+.panel {
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+.panel-flat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+/* Mono labels */
+.label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* Registration / crop marks on section corners */
+.crop {
+  position: relative;
+}
+.crop::before,
+.crop::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--line-strong);
+  pointer-events: none;
+}
+.crop::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.crop::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+/* Animated dashed flow line */
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+.flow-line {
+  stroke-dasharray: 4 8;
+  animation: dash-flow 1.2s linear infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+.pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.caret {
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  animation: marquee 40s linear infinite;
+}
+
+/* Scrollbars */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+/* Skip link */
+.skip-link {
+  position: fixed;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  background: var(--ink);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 16px;
+}
+
+/* ============ DEBUG MODE (secret) ============ */
+html.debug section[data-debug] {
+  outline: 1px dashed var(--cobalt);
+  outline-offset: -8px;
+}
+html.debug section[data-debug]::after {
+  content: "<" attr(data-debug) " />";
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+  color: var(--cobalt);
+  background: color-mix(in srgb, var(--cobalt) 10%, white);
+  padding: 2px 8px;
+  border-radius: 6px;
+  z-index: 5;
+}
+html.debug .debug-layer {
+  opacity: 1 !important;
+}
+html.debug * {
+  outline-color: color-mix(in srgb, var(--cobalt) 40%, transparent);
+}
+html.debug .panel,
+html.debug .panel-flat {
+  outline: 1px dotted color-mix(in srgb, var(--signal) 60%, transparent);
+}
+
+/* ============ Reduced motion ============ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Print = resume */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+}
+
+html.booted .boot-overlay {
+  display: none;
+}
+
+/* Gradient display text (outline strokes render glyph overlaps in Unbounded, so we fill instead) */
+.text-grad {
+  color: transparent;
+  background: linear-gradient(100deg, var(--signal) 0%, #ff7a3d 35%, var(--violet) 100%);
+  background-size: 200% 100%;
+  background-position: 0% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: background-position 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.text-grad:hover {
+  background-position: 100% 0;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
