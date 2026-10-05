@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { useState } from "react";
+import { AnimatePresence, LayoutGroup, motion, useInView } from "motion/react";
+import { useRef, useState } from "react";
 import { useApp } from "@/components/system/AppProvider";
 import { useInterval, useReducedMotionPref } from "@/lib/hooks";
 
@@ -269,6 +269,8 @@ export function StoriesMini() {
     { id: "5", t: "Critical path", col: 2, who: "B" },
   ]);
   const [event, setEvent] = useState("ws: connected");
+  const boardRef = useRef<HTMLDivElement>(null);
+  const nearView = useInView(boardRef);
 
   // Simulated collaborator moving cards → "real-time" broadcast
   useInterval(
@@ -283,11 +285,11 @@ export function StoriesMini() {
       setEvent(`ws ← user ${pick.who} moved "${pick.t}"`);
       setCards(cards.map((c) => (c.id === pick.id ? { ...c, col: c.col + 1 } : c)));
     },
-    reduced ? null : 2200,
+    reduced || !nearView ? null : 2200,
   );
 
   return (
-    <div className="flex h-full flex-col">
+    <div ref={boardRef} className="flex h-full flex-col">
       <LayoutGroup id="stories">
       <div className="grid flex-1 grid-cols-3 gap-2">
         {COLS.map((col, ci) => (

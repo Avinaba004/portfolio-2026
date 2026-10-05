@@ -12,18 +12,18 @@ const LINES = [
 ];
 
 /**
- * Boot sequence. Plays once per session; any key / click skips.
- * An inline script in <head> adds `booted` to <html> for repeat visits so the
- * overlay never flashes (see BOOT_SCRIPT).
+ * Boot sequence. Plays once per session (any key / tap skips the text), but the overlay
+ * only lifts once the hero's assets (3D unit, fonts) have actually loaded — nothing pops in late.
+ * An inline script in <head> adds `booted` to <html> on repeat visits so the overlay never flashes.
  */
-
-export function Boot({ onDone }: { onDone: () => void }) {
+export function Boot({ assetsReady, onDone }: { assetsReady: boolean; onDone: () => void }) {
   const [step, setStep] = useState(-1);
-  const [done, setDone] = useState(false);
+  const [animDone, setAnimDone] = useState(false);
+  const done = animDone && assetsReady;
+
   useEffect(() => {
     if (document.documentElement.classList.contains("booted")) {
-      queueMicrotask(() => setDone(true));
-      onDone();
+      queueMicrotask(() => setAnimDone(true));
       return;
     }
     const timers: number[] = [];
@@ -31,8 +31,8 @@ export function Boot({ onDone }: { onDone: () => void }) {
       try {
         sessionStorage.setItem("ag-booted", "1");
       } catch {}
-      setDone(true);
-      onDone();
+      setStep(LINES.length + 1);
+      setAnimDone(true);
     };
     timers.push(window.setTimeout(() => setStep(0), 450));
     LINES.forEach((_, i) => timers.push(window.setTimeout(() => setStep(i + 1), 650 + i * 260)));
@@ -49,7 +49,13 @@ export function Boot({ onDone }: { onDone: () => void }) {
       window.removeEventListener("keydown", onSkip);
       window.removeEventListener("pointerdown", onSkip);
     };
-  }, [onDone]);
+  }, []);
+
+  useEffect(() => {
+    if (done) onDone();
+  }, [done, onDone]);
+
+  const waiting = animDone && !assetsReady;
 
   return (
     <AnimatePresence>
@@ -72,12 +78,12 @@ export function Boot({ onDone }: { onDone: () => void }) {
             ))}
             {step > LINES.length && (
               <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="mt-4 flex items-center gap-3">
-                <span className="h-2 w-2 rounded-full bg-signal pulse-dot" />
-                <span className="font-display text-lg font-semibold tracking-[0.2em] text-ink">SYSTEM READY</span>
+                <span className={`h-2 w-2 rounded-full ${waiting ? "bg-amber" : "bg-signal"} pulse-dot`} />
+                <span className="font-display text-lg font-semibold tracking-[0.2em] text-ink">{waiting ? "LOADING 3D UNIT…" : "SYSTEM READY"}</span>
               </motion.div>
             )}
             <div className="mt-8 h-px w-full overflow-hidden bg-line">
-              <motion.div className="h-full bg-ink" initial={{ width: 0 }} animate={{ width: `${(Math.max(0, step) / (LINES.length + 1)) * 100}%` }} />
+              <motion.div className="h-full bg-ink" initial={{ width: 0 }} animate={{ width: `${(Math.max(0, step) / (LINES.length + 1)) * (assetsReady ? 100 : 92)}%` }} />
             </div>
             <p className="mt-3 text-[10px] tracking-widest text-muted">PRESS ANY KEY TO SKIP</p>
           </div>

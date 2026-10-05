@@ -1,25 +1,38 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { Boot } from "@/components/hero/Boot";
 import { Hero } from "@/components/hero/Hero";
 import { WhatIBuild } from "@/components/sections/WhatIBuild";
 import { ProjectGalaxy } from "@/components/work/ProjectGalaxy";
+import { Incidents } from "@/components/sections/Incidents";
+import { StackGraph } from "@/components/sections/StackGraph";
+import { DNA } from "@/components/sections/DNA";
+import { Timeline } from "@/components/sections/Timeline";
+import { Lab } from "@/components/lab/Lab";
+import { ConsoleSection, Contact } from "@/components/sections/ConsoleAndContact";
 import { scrollToSection } from "@/lib/navigate";
 
-// Below-the-fold sections are split into their own chunks.
-const Incidents = dynamic(() => import("@/components/sections/Incidents").then((m) => m.Incidents));
-const StackGraph = dynamic(() => import("@/components/sections/StackGraph").then((m) => m.StackGraph));
-const DNA = dynamic(() => import("@/components/sections/DNA").then((m) => m.DNA));
-const Timeline = dynamic(() => import("@/components/sections/Timeline").then((m) => m.Timeline));
-const Lab = dynamic(() => import("@/components/lab/Lab").then((m) => m.Lab));
-const ConsoleSection = dynamic(() => import("@/components/sections/ConsoleAndContact").then((m) => m.ConsoleSection));
-const Contact = dynamic(() => import("@/components/sections/ConsoleAndContact").then((m) => m.Contact));
-
+/**
+ * Every section is server-rendered with the page (no late pop-in, stable scroll height).
+ * The only async asset is the 3D unit (three.js); the boot screen waits for it and the fonts.
+ */
 export function HomeClient() {
   const [ready, setReady] = useState(false);
+  const [assetsReady, setAssetsReady] = useState(false);
   const onDone = useCallback(() => setReady(true), []);
+
+  useEffect(() => {
+    let alive = true;
+    const fallback = setTimeout(() => alive && setAssetsReady(true), 8000); // never trap visitors on a slow network
+    Promise.all([import("@/components/hero/RobotScene"), document.fonts?.ready])
+      .catch(() => undefined)
+      .then(() => alive && setAssetsReady(true));
+    return () => {
+      alive = false;
+      clearTimeout(fallback);
+    };
+  }, []);
 
   // Honour deep links like /#lab after navigation from another route.
   useEffect(() => {
@@ -31,7 +44,7 @@ export function HomeClient() {
 
   return (
     <>
-      <Boot onDone={onDone} />
+      <Boot assetsReady={assetsReady} onDone={onDone} />
       <main id="main">
         <Hero ready={ready} />
         <WhatIBuild />

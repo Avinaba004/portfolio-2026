@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Flight } from "@/app/api/flights/route";
 import { useApp } from "@/components/system/AppProvider";
 
@@ -36,6 +36,76 @@ function simulate(): Flight[] {
 
 type Live = { mode: "loading" | "live" | "sim"; flights: Flight[]; time?: number };
 
+/* ---------- Map tiles on one canvas ----------
+   Tiles are decoded off the main thread (img.decode), converted to grayscale once, cached,
+   and blitted to a single canvas — no per-image layout, filter or decode during scroll. */
+const tileCache = new Map<string, Promise<HTMLCanvasElement | null>>();
+
+function loadTile(url: string) {
+  let p = tileCache.get(url);
+  if (!p) {
+    p = (async () => {
+      try {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.decoding = "async";
+        img.src = url;
+        await img.decode();
+        const c = document.createElement("canvas");
+        c.width = c.height = TILE;
+        const g = c.getContext("2d")!;
+        g.drawImage(img, 0, 0);
+        const d = g.getImageData(0, 0, TILE, TILE);
+        const px = d.data;
+        for (let i = 0; i < px.length; i += 4) {
+          // luminance → grayscale, lifted slightly toward the paper tone
+          const l = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+          const v = 24 + l * 0.9;
+          px[i] = v;
+          px[i + 1] = v;
+          px[i + 2] = v * 0.985;
+        }
+        g.putImageData(d, 0, 0);
+        return c;
+      } catch {
+        return null;
+      }
+    })();
+    tileCache.set(url, p);
+  }
+  return p;
+}
+
+function TileCanvas({ tiles, zoom, ox, oy, w, h }: { tiles: { x: number; y: number; key: string }[]; zoom: number; ox: number; oy: number; w: number; h: number }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const cv = ref.current;
+    if (!cv) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+    }
+    const g = cv.getContext("2d")!;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    let alive = true;
+    const n = 2 ** zoom;
+    tiles.forEach((t) => {
+      const wx = ((t.x % n) + n) % n;
+      const url = `https://tile.openstreetmap.org/${zoom}/${wx}/${t.y}.png`;
+      const dx = t.x * TILE - ox;
+      const dy = t.y * TILE - oy;
+      loadTile(url).then((c) => {
+        if (alive && c) g.drawImage(c, dx, dy, TILE, TILE);
+      });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [tiles, zoom, ox, oy, w, h]);
+  return <canvas ref={ref} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden />;
+}
+
 export default function SkyWatch() {
   const { sfx } = useApp();
   const wrap = useRef<HTMLDivElement>(null);
@@ -45,8 +115,9 @@ export default function SkyWatch() {
   const [data, setData] = useState<Live>({ mode: "loading", flights: [] });
   const [sel, setSel] = useState<string | null>(null);
   const positions = useRef(new Map<string, { lat: number; lon: number }>());
-  // Render-safe snapshot of the mutable positions (refreshed ~30fps).
-  const [snap, setSnap] = useState(() => new Map<string, { lat: number; lon: number }>());
+  // Aircraft are moved by writing transforms directly — no React re-render per frame.
+  const planeEls = useRef(new Map<string, HTMLElement>());
+  const view = useRef({ ox: 0, oy: 0, zoom: 7, w: 800, h: 460 });
   const drag = useRef<{ x: number; y: number; c: typeof CENTER } | null>(null);
 
   const [onScreen, setOnScreen] = useState(false);
@@ -71,7 +142,6 @@ export default function SkyWatch() {
       const airborne = j.flights.filter((f) => !f.onGround);
       if (j.live && airborne.length) {
         positions.current = new Map(airborne.map((f) => [f.id, { lat: f.lat, lon: f.lon }]));
-        setSnap(new Map(positions.current));
         setData({ mode: "live", flights: airborne, time: j.time });
         return;
       }
@@ -80,7 +150,6 @@ export default function SkyWatch() {
       if (positions.current.size) return;
       const sim = simulate();
       positions.current = new Map(sim.map((f) => [f.id, { lat: f.lat, lon: f.lon }]));
-      setSnap(new Map(positions.current));
       setData({ mode: "sim", flights: sim });
     }
   }, []);
@@ -90,6 +159,21 @@ export default function SkyWatch() {
     const id = setInterval(load, 60_000);
     return () => clearInterval(id);
   }, [load]);
+
+  /** Writes every aircraft's screen position straight to the DOM (GPU transform). */
+  const placeAll = useCallback(() => {
+    const v = view.current;
+    planeEls.current.forEach((el, id) => {
+      const pos = positions.current.get(id);
+      if (!pos) return;
+      const pr = project(pos.lat, pos.lon, v.zoom);
+      const x = pr.x - v.ox;
+      const y = pr.y - v.oy;
+      const out = x < -24 || y < -24 || x > v.w + 24 || y > v.h + 24;
+      el.style.visibility = out ? "hidden" : "visible";
+      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%)`;
+    });
+  }, []);
 
   // Dead-reckoning: advance each aircraft along its heading at its velocity → smooth motion between polls.
   useEffect(() => {
@@ -118,16 +202,22 @@ export default function SkyWatch() {
       acc += dt;
       if (acc > 1 / 30) {
         acc = 0;
-        setSnap(new Map(Array.from(positions.current, ([k, v]) => [k, { ...v }])));
+        placeAll();
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [data, onScreen]);
+  }, [data, onScreen, placeAll]);
 
   const c = project(center.lat, center.lon, zoom);
   const origin = { x: c.x - size.w / 2, y: c.y - size.h / 2 };
+
+  // Keep the imperative view in sync after each render (pan / zoom / resize / new data), then re-place planes.
+  useLayoutEffect(() => {
+    view.current = { ox: origin.x, oy: origin.y, zoom, w: size.w, h: size.h };
+    placeAll();
+  });
 
   const tiles = useMemo(() => {
     const out: { x: number; y: number; key: string }[] = [];
@@ -138,11 +228,6 @@ export default function SkyWatch() {
     for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) out.push({ x, y, key: `${zoom}/${x}/${y}` });
     return out;
   }, [origin.x, origin.y, size.w, size.h, zoom]);
-
-  const toScreen = (lat: number, lon: number) => {
-    const p = project(lat, lon, zoom);
-    return { x: p.x - origin.x, y: p.y - origin.y };
-  };
 
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest("button")) return;
@@ -175,41 +260,23 @@ export default function SkyWatch() {
         role="application"
         aria-label="Interactive live flight map over eastern India. Drag to pan; use zoom buttons; select aircraft from the list."
       >
-        {tiles.map((t) => {
-          const n = 2 ** zoom;
-          const wx = ((t.x % n) + n) % n;
-          return (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={t.key}
-              src={`https://tile.openstreetmap.org/${zoom}/${wx}/${t.y}.png`}
-              alt=""
-              draggable={false}
-              className="pointer-events-none absolute select-none [filter:grayscale(1)_contrast(0.92)_brightness(1.06)]"
-              style={{ left: t.x * TILE - origin.x, top: t.y * TILE - origin.y, width: TILE, height: TILE }}
-            />
-          );
-        })}
-        <div className="pointer-events-none absolute inset-0 bg-paper/25 mix-blend-multiply" aria-hidden />
+        <TileCanvas tiles={tiles} zoom={zoom} ox={origin.x} oy={origin.y} w={size.w} h={size.h} />
 
         {data.flights.map((f) => {
-          const p = snap.get(f.id);
-          if (!p) return null;
-          const s = toScreen(p.lat, p.lon);
-          if (s.x < -20 || s.y < -20 || s.x > size.w + 20 || s.y > size.h + 20) return null;
           const on = sel === f.id;
           return (
             <button
               key={f.id}
+              ref={(el) => void (el ? planeEls.current.set(f.id, el) : planeEls.current.delete(f.id))}
               onClick={() => {
                 setSel(f.id);
                 sfx("select");
               }}
-              className="absolute -translate-x-1/2 -translate-y-1/2 p-1.5"
-              style={{ left: s.x, top: s.y }}
+              className="absolute top-0 left-0 p-1.5 will-change-transform"
+              style={{ visibility: "hidden" }}
               aria-label={`Aircraft ${f.callsign}`}
             >
-              <svg viewBox="0 0 24 24" className={`h-5 w-5 drop-shadow transition-transform ${on ? "scale-150" : ""}`} style={{ transform: `rotate(${f.heading ?? 0}deg)` }} aria-hidden>
+              <svg viewBox="0 0 24 24" className={`h-5 w-5 transition-transform ${on ? "scale-150" : ""}`} style={{ transform: `rotate(${f.heading ?? 0}deg)` }} aria-hidden>
                 <path d="M12 2l1.6 6.5L21 13v2l-7.4-2.2L13 19l2.5 1.8V22L12 21l-3.5 1v-1.2L11 19l-.6-6.2L3 15v-2l7.4-4.5z" fill={on ? "var(--signal)" : "var(--ink)"} />
               </svg>
               {on && <span className="absolute top-full left-1/2 -translate-x-1/2 rounded bg-signal px-1.5 py-0.5 font-mono text-[9px] whitespace-nowrap text-white">{f.callsign}</span>}
@@ -255,7 +322,7 @@ export default function SkyWatch() {
                 {[
                   ["CALLSIGN", selected.callsign],
                   ["ORIGIN", selected.country || "—"],
-                  ["ALTITUDE", selected.altitude != null ? `${Math.round(selected.altitude * 3.281).toLocaleString()} ft` : "—"],
+                  ["ALTITUDE", selected.altitude != null ? `${Math.max(0, Math.round(selected.altitude * 3.281)).toLocaleString()} ft` : "—"],
                   ["VELOCITY", selected.velocity != null ? `${Math.round(selected.velocity * 1.944)} kt` : "—"],
                   ["HEADING", selected.heading != null ? `${Math.round(selected.heading)}°` : "—"],
                   ["ICAO24", selected.id.startsWith("sim") ? "—" : selected.id],
@@ -286,7 +353,7 @@ export default function SkyWatch() {
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left font-mono text-[11px] ${sel === f.id ? "bg-ink text-white" : "hover:bg-paper-2"}`}
               >
                 <span>{f.callsign}</span>
-                <span className={sel === f.id ? "text-white/60" : "text-muted"}>{f.altitude != null ? `${Math.round(f.altitude * 3.281 / 100)} FL` : "—"}</span>
+                <span className={sel === f.id ? "text-white/60" : "text-muted"}>{f.altitude != null ? `${Math.max(0, Math.round((f.altitude * 3.281) / 100))} FL` : "—"}</span>
               </button>
             </li>
           ))}

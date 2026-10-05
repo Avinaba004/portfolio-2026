@@ -88,9 +88,16 @@ export function HeroGraph() {
       <div className="mb-2 flex items-center gap-2 font-mono text-[10px] tracking-[0.16em] text-muted">
         <span className="h-px w-6 bg-line-strong" aria-hidden />
         SYSTEM GRAPH · {autoplaying ? "AUTO-SCAN" : reverse ? "REVERSE TRACE" : "FORWARD TRACE"}
-        <AnimatePresence>
+        <AnimatePresence mode="wait" initial={false}>
           {sel && (
-            <motion.span key={sel.id} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className={reverse ? "text-cobalt" : "text-signal"}>
+            <motion.span
+              key={`${sel.kind}-${sel.id}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              className={reverse ? "text-cobalt" : "text-signal"}
+            >
               {sel.id} {reverse ? "←" : "→"} {links.length} {reverse ? "SKILLS" : "SYSTEMS"}
             </motion.span>
           )}

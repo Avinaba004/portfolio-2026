@@ -1,25 +1,12 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import type { Project } from "@/data/projects";
 import { workProjects } from "@/data/projects";
 
-type VizProps = { part: string; p: Project };
-const loading = () => <div className="h-64 animate-pulse rounded-2xl bg-paper-2" />;
-
-const VIZ: Record<string, React.ComponentType<VizProps>> = {
-  odys: dynamic(() => import("./viz/odys"), { loading }),
-  gulp: dynamic(() => import("./viz/gulp"), { loading }),
-  egle: dynamic(() => import("./viz/egle"), { loading }),
-  mopbb: dynamic(() => import("./viz/mopbb"), { loading }),
-  lurie: dynamic(() => import("./viz/lurie"), { loading }),
-  medicaid: dynamic(() => import("./viz/medicaid"), { loading }),
-  asana: dynamic(() => import("./viz/asana"), { loading }),
-  "ai-assistant": dynamic(() => import("./viz/ai-assistant"), { loading }),
-};
+export type VizSlots = { system: React.ReactNode; flow: React.ReactNode; human: React.ReactNode; signature: React.ReactNode };
 
 const VIEWS = [
   { id: "system", label: "SYSTEM VIEW", hint: "Architecture" },
@@ -27,8 +14,8 @@ const VIEWS = [
   { id: "human", label: "HUMAN VIEW", hint: "What users touch" },
 ] as const;
 
-export function CaseStudy({ p }: { p: Project }) {
-  const Viz = VIZ[p.slug];
+/** Visualizations arrive pre-rendered from the server page, so the case study shows complete on first paint. */
+export function CaseStudy({ p, viz }: { p: Project; viz: VizSlots }) {
   const [view, setView] = useState<(typeof VIEWS)[number]["id"]>("system");
   const idx = workProjects.findIndex((x) => x.slug === p.slug);
   const next = workProjects[(idx + 1) % workProjects.length];
@@ -140,7 +127,7 @@ export function CaseStudy({ p }: { p: Project }) {
           <div id="cs-view" role="tabpanel" className="crop rounded-[24px] border border-line bg-card/50 p-3 sm:rounded-[28px] sm:p-8">
             <AnimatePresence mode="wait">
               <motion.div key={view} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <Viz part={view} p={p} />
+                {viz[view]}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -149,7 +136,7 @@ export function CaseStudy({ p }: { p: Project }) {
         {/* Signature interactive blocks */}
         <div id="cs-engineering" className="scroll-mt-24">
           <div className="label pt-6">03 · ENGINEERING</div>
-          <Viz part="signature" p={p} />
+          {viz.signature}
         </div>
 
         {/* Detail panel */}

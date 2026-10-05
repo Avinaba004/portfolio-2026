@@ -1,13 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import { labProjects, miniProjects } from "@/data/projects";
 import { Section, SectionHeader } from "@/components/ui/Section";
-import { useNearView } from "@/lib/hooks";
+import SkyWatch from "./SkyWatch";
 import { ExpTrack, QueryMini, StoriesMini } from "./LabMinis";
 
-const SkyWatch = dynamic(() => import("./SkyWatch"), { ssr: false, loading: () => <div className="h-[480px] animate-pulse rounded-[22px] bg-paper-2" /> });
 
 const get = (slug: string) => labProjects.find((p) => p.slug === slug)!;
 
@@ -56,10 +54,9 @@ function Experiment({ id, slug, exp, children, className = "", demo = true }: { 
 }
 
 export function Lab() {
-  const [skyRef, near] = useNearView<HTMLDivElement>("400px");
   return (
     <Section id="lab" debug="TheLab · Experiments" labelledBy="lab-h" className="bg-paper-2/50">
-      <div className="bp-grid pointer-events-none absolute inset-0 opacity-40 mask-fade-y" aria-hidden />
+      <div className="bp-grid pointer-events-none absolute inset-0 opacity-25" aria-hidden />
       <div className="relative">
         <SectionHeader
           index="07"
@@ -74,7 +71,7 @@ export function Lab() {
 
         <div className="grid gap-5">
           <Experiment id="lab-skywatch" slug="skywatch" exp="01" demo={false}>
-            <div ref={skyRef}>{near ? <SkyWatch /> : <div className="h-[480px] rounded-[22px] bg-paper-2" />}</div>
+            <SkyWatch />
           </Experiment>
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
